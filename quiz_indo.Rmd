@@ -1,0 +1,236 @@
+---
+title: "Quiz Unsupervised Learning"
+author: "Team Algoritma"
+date: "3/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(FactoMineR)
+```
+
+Kuis ini merupakan bagian dari proses penilaian *Algoritma Academy*. Selamat anda sudah menyelesaikan materi *Unsupervised Learning*! Kami akan melakukan penilaian berupa kuis untuk menguji materi yang sudah dipelajari. Pengerjaan Kuis diharapkan dapat dilakukan di dalam kelas, silakan hubungi tim instruktur kami jika Anda melewatkan kesempatan untuk mengambilnya di kelas.
+
+# Data Exploration
+
+Pada kuis ini, kita akan menggunakan data **Arabica Coffee Beans Reviews**. Anda bisa mendapatkan file csv yang tersimpan dalam folder ini dengan nama `coffee.csv`. Sebelum kita melakukan analisis clustering dan *principle component analysis*, kita perlu melakukan eksplorasi data. anda dapat melihat sekilas struktur dari dataset yang digunakan! Anda dapat menggunakan fungsi `str()` atau `glimpse()`. 
+
+```{r}
+# your code here
+coffee <- read.csv("coffee.csv", stringsAsFactors = T)
+str(coffee)
+```
+
+Dataset ini terdiri dari 13 variabel dengan 1082 baris yang berisi ulasan (reviews) varietas kopi Arabika oleh individu yang sangat terlatih dari *Coffee Quality Institute*. Perhatikan glosarium berikut:
+
+- `coffeId` : id sebuah coffee
+- `Aroma` : aroma sebuah kopi setelah ditambahkan air panas (misalnya: floral, spicy, fruity, winery, sweety, earthy atau nutty dll.).
+- `Flavor` : karakteristik rasa (misalnya: fruity, sour, bitter, rich atau balanced dll.).
+- `Aftertaste` : Kesan secara keseluruhan sisa kopi didalam mulut.
+- `Acidity` : Tingkat ketajaman dan keaktifan keasaman (misalnya: sharp, thin, flat, mild, or neutral etc.).
+- `Body` : Tekstur kopi ketika berada didalam mulut (misalnya: full, thick, balanced, buttery or thin etc.).
+- `Balance` : Tidak ada rasa yang mendominasi yang lainnya.
+- `Uniformity` : Seberapa mirip ukuran partikel bubuk kopi.
+- `Clean cup` : tidak ada cacat rasa.
+- `Sweetness` : ringan, sensasi rasa halus tanpa rasa yang keras.
+- `Cupper points` : poin yang diperoleh dari Cupper (orang yang secara objektif meninjau rasa dan aroma kopi yang diseduh, untuk mengetahui apakah itu Kopi Kelas Khusus).
+- `Moisture` : Tingkat kelembapan pada biji kopi
+- `Quakers`: biji kopi yang belum matang, seringkali dengan permukaan yang berkerut, tidak menjadi gelap saat dipanggang.
+
+Jika anda melihat secara hati-hati, `coffeeId` tidak memberikan informasi yang berarti karena dia hanya merepresentasikan indeks baris dari suatu observasi dan setiap kopi memiliki id masing-masing. Oleh karena itu, akan lebih baik bila menghapus kolom tersebut sebelum melanjukan ketahap selanjutnya.
+
+```{r}
+# your code here
+coffee_clean <- coffee %>% 
+  select(-c(coffeeId))
+head(coffee_clean)
+```
+
+#### EDA
+
+Cek missing values:
+
+```{r}
+anyNA(coffee_clean)
+```
+
+Cek skala antar variabel
+
+```{r}
+summary(coffee_clean)
+```
+
+# 1. Principal Component Analysis (PCA)
+
+## Data Pre-Processing
+
+PCA sangat berguna untuk menyimpan informasi sekaligus mereduksi dimensi data. Namun, kita perlu memastikan bahwa data sudah diskalakan (*scaled*) dengan benar untuk mendapatkan PCA yang berguna. Anda dapat menggunakan fungsi `scale()` untuk menskalakan variabel numerik dan menyimpannya sebagai `coffee_scale`.
+
+```{r}
+# your code here
+coffee_scale <- scale(coffee_clean)
+summary(coffee_scale)
+```
+
+## Build your Principal Component
+
+Kita telah menyiapkan data yang sudah diskalakan untuk digunakan pada PCA. Selanjutnya, kita akan mencoba membuat *principal component* dari `coffee_scale`. Ingat kembali bagaimana kita menggunakan *library* `FactoMineR` untuk melakukan PCA. Gunakan fungsi `PCA()` dari library tersebut untuk menghasilkan PCA dan menyimpannya sebagai `pca_coffee`. Ingatlah untuk mengatur parameter `scale.unit` ke` FALSE` karena kita sudah menskalakan data secara manual. Periksa ringkasan dari `pca_coffee`.
+
+```{r}
+# your code here
+library(FactoMineR)
+pca_coffee <- PCA(X = coffee_scale, scale.unit = F, graph = T, ncp = ncol(coffee_scale))
+```
+
+```{r}
+pca_coffee$eig
+```
+```{r}
+coffee_scale_comp <- prcomp(coffee_clean, scale = T)
+summary(coffee_scale_comp)
+```
+
+Berdasarkan hasil ringkasan (*summary*), berapa banyak *Principal Components* (PCs) yang akan anda gunakan bila anda hanya mentoleransi informasi yang hilang tidak lebih dari 20%.
+ - [X] 4 PC (PC 1 through 4)
+ - [ ] 5 PC (PC 1 through 5)
+ - [ ] 6 PC (PC 1 through 6)
+ - [ ] 1 PC (PC 1 only)
+
+Implementasi PCA hebat lainnya adalah memvisualisasikan data berdimensi tinggi menjadi plot 2 dimensi untuk berbagai tujuan, seperti analisis cluster atau mendeteksi pencilan. Untuk memvisualisasikan PCA, gunakan fungsi `plot.PCA()` ke `pca_coffee`. Ini akan menghasilkan plot PCA individu.
+
+```{r}
+# your code here
+PCA(coffee_scale, scale.unit = F,graph = T) 
+```
+
+2. Dilihat dari plot yang sudah Anda buat, kopi dengan id berapa yang dianggap outlier?
+ - [X] 1082, 1080, 1081
+ - [ ] 1082, 993, 998
+ - [ ] 1081, 308, 201
+ - [ ] 1080, 1082, 998
+
+Kita juga dapat membuat plot dari variabel PCA yang menunjukkan *loading information* variabel dari PCA hanya dengan menambahkan `choix ="var "` di `plot.PCA ()`. *loading information* akan diwakili oleh panjang panah dari pusat koordinat. Semakin panjang panahnya, semakin besar *loading information* dari variabel tersebut. Namun, ini mungkin bukan metode yang efisien jika kita memiliki banyak fitur. Beberapa variabel akan tumpang tindih satu sama lain, sehingga lebih sulit untuk melihat nama variabel.
+
+Cara alternatif untuk mengekstrak *loading information* adalah dengan menggunakan fungsi `dimdesc()` ke `pca_coffee`. Simpan hasilnya sebagai `pca_dimdesc`. Periksa *loading information* dari dimensi/PC pertama  dengan memanggil `pca_dimdesc$Dim.1` karena dimensi pertama adalah yang menyimpan informasi paling banyak.
+
+```{r}
+# your code here
+as.data.frame(dimdesc(pca_coffee)$Dim.1$quanti)
+```
+
+3. Sebutkan 3 variabel yang paling berkontribusi pada PC 1 berdasarkan korelasi antar variabel dengan PC 1.
+ - [ ] Aroma, Flavor, Aftertaste
+ - [ ] Sweetness, Clean.cup, Uniformity
+ - [X] Balance, Flavor, Aftertaste
+ - [ ] Moisture, Quakers, Clean.Cup
+ - [ ] Acidity, Body, Balance
+
+Dalam *principal component analysis*, setiap PC yang dihasilkan memiliki nilai eigen yang diperoleh dari matriks kovarians. Semakin besar nilai eigen, semakin besar varian yang ditangkap oleh PC.
+
+4. Manakah dari pernyataan berikut ini yang **TIDAK BENAR** tentang PCA?
+ - [ ] PCA requires data to be scaled so they have the same range of measurement
+ - [ ] A Principal Component with an eigenvalue of 0.6 is not more helpful than a PC with an eigenvalue of 6.0
+ - [X] We cannot fully reconstruct the original data from a PCA even when we have eigen value and eigen vector
+
+# 2. K-Means Clustering
+
+Pengelompokan data (*Data Clustering*) adalah teknik data mining yang umum untuk membuat kelompok data yang dapat diidentifikasi sebagai "data dengan karakteristik yang sama". Sebelum melakukan pengelompokan data, Anda perlu menghapus *outlier* yang teridentifikasi berdasarkan plot PCA individu sebelumnya. Observasi dengan **coffeeId 1082** adalah pencilan yang cukup meluas dibandingkan dengan pengamatan lainnya. Hapus observasi tersebut dari dataset awal kita dan sekali lagi lakukan penskalakan (*scaling*) data.
+
+```{r}
+# your code here
+coffee_filter <- coffee %>% 
+  filter(coffeeId != 1082 )
+
+coffee_clean <- coffee_filter %>% 
+  select(-c(coffeeId)) %>% 
+  na.omit()
+
+coffee_scale <- coffee_clean %>% scale()
+```
+
+## 2.1 Choosing Optimum K
+
+Langkah selanjutnya dalam membangun cluster dengan K-means adalah menemukan jumlah cluster optimal untuk memodelkan data kita. Gunakan fungsi `kmeansTunning()` yang disediakan di bawah ini untuk menemukan K yang optimal menggunakan metode Elbow. Gunakan maksimum `maxK` sebesar 5 untuk membatasi plot menjadi 5 cluster berbeda.
+
+```{r message=F, warning=F}
+RNGkind(sample.kind = "Rounding")
+kmeansTunning <- function(data, maxK) {
+  withinall <- NULL
+  total_k <- NULL
+  for (i in 2:maxK) {
+    set.seed(101)
+    temp <- kmeans(data,i)$tot.withinss
+    withinall <- append(withinall, temp)
+    total_k <- append(total_k,i)
+  }
+  plot(x = total_k, y = withinall, type = "o", xlab = "Number of Cluster", ylab = "Total within")
+}
+
+# kmeansTunning(your_data, maxK = 5)
+kmeansTunning(coffee_scale, maxK = 5)
+```
+
+Berdasarkan *elbow plot* yang dihasilkan dari fungsi di atas coba jawab pertanyaan berikut:
+
+5. Berapa jumlah cluster yang optimal?
+  - [ ] 2
+  - [ ] 3
+  - [X] 4
+  - [ ] 5
+
+K-means merupakan algoritma clustering yang mengelompokkan data berdasarkan jarak. Cluster yang dihasilkan dikatakan optimal jika jarak antar data pada cluster yang sama rendah dan jarak antar data dari cluster yang berbeda tinggi.
+
+6. Manakah dari pernyataan berikut ini yang **TIDAK BENAR** tentang K-Means?
+  - [ ] The centroid in the first iteration is placed randomly
+  - [ ] A good cluster are clusters with low `withinss` and high `betweenss`
+  - [ ] Cluster with low `withinss` means the character of the data within 1 cluster are similar to each other
+  - [X] The greater the value of `betweenss`, indicates the greater the data variance in each cluster
+
+## 2.2 Building Cluster
+
+Setelah Anda menemukan K optimal pada bagian sebelumnya, coba lakukan K-means *clustering*  dari data Anda dan simpan sebagai `coffee_cluster`. Gunakan `set.seed (101)` untuk menjamin contoh yang dapat direproduksi. Ekstrak informasi cluster dari objek K-means yang dihasilkan menggunakan `cofee_cluster$cluster` dan tambahkan sebagai kolom baru bernama` cluster` ke dataset kopi.
+
+
+```{r}
+# your code here
+set.seed(101)
+
+coffee_cluster <- kmeans(x = coffee_scale, centers = 4)
+
+coffee_filter <- coffee_filter %>% 
+   mutate(cluster = coffee_cluster$cluster)
+
+```
+
+## 2.3 Clusters Profiling
+
+Anda dapat menggunakan *chunk* berikut untuk menjawab pertanyaan nomor 7.
+
+```{r}
+# your code here
+coffee_filter %>% 
+  filter(coffeeId %in% c(929,1060,208,1011)) %>%  select(coffeeId,cluster)
+```
+
+7. Untuk pelanggan yang menikmati kopi dengan `coffeId` 929, manakah dari biji kopi berikut yang mungkin cukup mirip untuk direkomendasi?
+  - [ ] 1060
+  - [ ] 208
+  - [X] 1011
+
+Ingat bahwa kita dapat melakukan profilisasi cluster dengan menggunakan kombinasi `group_by()` dan `summarise_all()`, yang dikelompokkan berdasarkan kolom cluster yang telah dibuat sebelumnya. Setelah Anda mengekstrak karakteristik untuk setiap cluster, coba jawab pertanyaan berikut:
+
+```{r}
+# your code here
+coffee_filter%>%
+   select(cluster,Aroma,Flavor,Sweetness,Acidity,Body) %>% 
+   group_by(cluster) %>% 
+   summarise_all(mean)
+```
+
+8. Bisakah Anda mendeskripsikan karakteristik kopi yang ada di cluster yang sama dengan `coffeeId` 218!
+  - [ ] Highest mean of Aroma, highest mean of Sweetness, and lowest mean of Acidity
+  - [ ] Highest mean of Aroma, highest mean of Flavor, and lowest mean of Body
+  - [X] Highest mean of Aroma, highest mean of Flavor, and highest mean of Acidity
+  - [ ] Highest mean of Aroma, lowest mean of Flavor, and lowest mean of Acidity
